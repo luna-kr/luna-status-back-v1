@@ -3,7 +3,6 @@ import { AppModule } from './module/app.module'
 import * as dotenv from 'dotenv'
 import queuePlugin from './resource/plugin/queue.plugin'
 import { connectDatabase } from './resource/database/main'
-import { ConfigModule } from '@nestjs/config'
 
 async function bootstrap () {
   dotenv.config()
@@ -18,7 +17,7 @@ async function bootstrap () {
 
   await app.listen(4000)
   connectDatabase().then(() => {
-    setInterval(queuePlugin.measure, 100)
+    setInterval(queuePlugin.measure, 100  )
   })
 }
 bootstrap()

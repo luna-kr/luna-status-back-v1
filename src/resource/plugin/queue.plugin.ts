@@ -21,7 +21,7 @@ export default {
                             _Record.service_id = _service.uuid
                             _Record.target = _service.PING_config.hostname
                             _Record.latency = String(_result.times[0])
-                            _Record.result = _result.alive ? ( _result.times[0] >= _service.PING_config.delay_criteria ? ResultType.Delayed : ResultType.Success ) : ResultType.Timeout
+                            _Record.result = _result.alive ? ( _result.times[0] >= _service.PING_config.delay_criteria ? ResultType.Delayed : ResultType.Success ) : (_service.PING_config.is_pop ? ResultType.ReRouted : ResultType.Timeout)
                             await getDatabaseClient().manager.save(_Record)
                             await getDatabaseClient().manager.getRepository(Service).update({ uuid: _service.uuid, is_active: true }, { recent_measure_date: new Date() })
                         })

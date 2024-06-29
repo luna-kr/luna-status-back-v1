@@ -58,7 +58,7 @@ export class StatusService {
         } catch(_error) { return _error instanceof Error ? { success: false, error: new Error('An unknown error has occured', { cause: _error }) } : (typeof _error == 'string' ? { success: false, error: new Error(_error) } : { success: false, error: new Error('An unknown error has occured.') }) }
     }
 
-    public async addService (_uuid: string, _name: string, _measureMethod: MeasureMethod, _interval: number, _config: { type: MeasureMethod.PING, hostname: string, timeout: number, delayCriteria: number }): Promise<{ success: true, id: string } | { success: false, error?: Error }> {
+    public async addService (_uuid: string, _name: string, _measureMethod: MeasureMethod, _interval: number, _config: { type: MeasureMethod.PING, hostname: string, timeout: number, delayCriteria: number, isPop: boolean }): Promise<{ success: true, id: string } | { success: false, error?: Error }> {
         try {
             if(_config.type !== _measureMethod) throw new Error('Invalid config.')
             if(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(_uuid) == false) throw new Error('Invalid group id.')
@@ -71,7 +71,8 @@ export class StatusService {
             _Service.PING_config = _measureMethod == MeasureMethod.PING ? {
                 hostname: _config.hostname,
                 timeout: _config.timeout,
-                delay_criteria: _config.delayCriteria
+                delay_criteria: _config.delayCriteria,
+                is_pop: _config.isPop
             } : null
             _Service.measure_interval = _interval
             _Service.group_id = _groups[0].uuid
@@ -96,8 +97,8 @@ export class StatusService {
                         const _Record = new Record()
                         _Record.service_id = _services[0].uuid
                         _Record.target = _services[0].PING_config.hostname
-                        _Record.latency = _result.avg
-                        _Record.result = _result.alive ? ResultType.Success : ResultType.Timeout
+                        _Record.latency = String(_result.times[0])
+                        _Record.result = _result.alive ? ( _result.times[0] >= _services[0].PING_config.delay_criteria ? ResultType.Delayed : ResultType.Success ) : (_services[0].PING_config.is_pop ? ResultType.ReRouted : ResultType.Timeout)
                         await this._entityManager.save(_Record)
                         return { success: true, isAlive: _result.alive }
                 }

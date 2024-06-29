@@ -21,7 +21,8 @@ export class Service {
     PING_config: {
         hostname: string,
         timeout: number,
-        delay_criteria: number
+        delay_criteria: number,
+        is_pop: boolean
     }
 
     @Column({ type: 'int', nullable: false, comment: 'Measure interval' })
