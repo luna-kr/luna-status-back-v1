@@ -34,6 +34,10 @@ export class Service {
     @Column({ type: 'timestamptz', nullable: true, default: null, comment: 'Recent measure date' })
     recent_measure_date: Date | null
 
+    @Column({ type: 'timestamptz', nullable: true, default: null, comment: 'Recent notificated date' })
+    recent_notificated_date: Date | null
+
+
 
     @Column({ type: 'boolean', default: true, comment: 'Data validity' })
     is_active: boolean
