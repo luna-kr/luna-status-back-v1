@@ -5,6 +5,7 @@ import * as dayjs from 'dayjs'
 import { promise } from 'ping'
 import notificationPlugin from "./notification.plugin"
 import { Maintenance, MaintenanceStatus } from "../database/entity/Maintenance.entity"
+import { ArrayContains } from "typeorm"
 
 export default {
     pluginName: 'queuePlugin',
@@ -15,7 +16,7 @@ export default {
             const _requiredServices = _services.filter(_service => { return dayjs(_service.recent_measure_date ?? new Date('2000-01-01 00:00:00Z')).add(_service.measure_interval, 'milliseconds').diff() <= 0 })
             for(const _service of _requiredServices) {
                 let _isMaintenance = false
-                const _maintenances = await getDatabaseClient().manager.getRepository(Maintenance).find({ where: { service_id: _service.uuid, status: MaintenanceStatus.Proceeding, is_active: true } })
+                const _maintenances = await getDatabaseClient().manager.getRepository(Maintenance).find({ where: { service_id: ArrayContains([ _service.uuid ]), status: MaintenanceStatus.Proceeding, is_active: true } })
                 if(_maintenances.length !== 0) _isMaintenance = true
                 switch (_service.measure_method) {
                     case MeasureMethod.PING:
