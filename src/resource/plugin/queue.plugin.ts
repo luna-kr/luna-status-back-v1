@@ -4,6 +4,7 @@ import { getDatabaseClient } from "../database/main"
 import * as dayjs from 'dayjs'
 import { promise } from 'ping'
 import notificationPlugin from "./notification.plugin"
+import { Maintenance, MaintenanceStatus } from "../database/entity/Maintenance.entity"
 
 export default {
     pluginName: 'queuePlugin',
@@ -13,6 +14,9 @@ export default {
             const _services = await getDatabaseClient().manager.getRepository(Service).find({ where: { is_active: true } })
             const _requiredServices = _services.filter(_service => { return dayjs(_service.recent_measure_date ?? new Date('2000-01-01 00:00:00Z')).add(_service.measure_interval, 'milliseconds').diff() <= 0 })
             for(const _service of _requiredServices) {
+                let _isMaintenance = false
+                const _maintenances = await getDatabaseClient().manager.getRepository(Maintenance).find({ where: { service_id: _service.uuid, status: MaintenanceStatus.Proceeding, is_active: true } })
+                if(_maintenances.length !== 0) _isMaintenance = true
                 switch (_service.measure_method) {
                     case MeasureMethod.PING:
                         promise.probe(_service.PING_config.hostname, {
@@ -22,7 +26,7 @@ export default {
                             _Record.service_id = _service.uuid
                             _Record.target = _service.PING_config.hostname
                             _Record.latency = String(_result.times[0])
-                            _Record.result = _result.alive ? ( _result.times[0] >= _service.PING_config.delay_criteria ? ResultType.Delayed : ResultType.Success ) : (_service.PING_config.is_pop ? ResultType.ReRouted : ResultType.Timeout)
+                            _Record.result = _isMaintenance ? ResultType.Maintenance : (_result.alive ? ( _result.times[0] >= _service.PING_config.delay_criteria ? ResultType.Delayed : ResultType.Success ) : (_service.PING_config.is_pop ? ResultType.ReRouted : ResultType.Timeout))
                             const _record = await getDatabaseClient().manager.save(_Record)
                             await getDatabaseClient().manager.getRepository(Service).update({ uuid: _service.uuid, is_active: true }, { recent_measure_date: new Date() })
 
