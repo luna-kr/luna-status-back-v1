@@ -31,12 +31,14 @@ export default {
                             const _record = await getDatabaseClient().manager.save(_Record)
                             await getDatabaseClient().manager.getRepository(Service).update({ uuid: _service.uuid, is_active: true }, { recent_measure_date: new Date() })
 
-                            if(_service.recent_notificated_date == null || dayjs().diff(_service.recent_notificated_date) >= 5 * 60 * 1000) {
+                            const _lastService = await getDatabaseClient().manager.getRepository(Service).find({ where: { uuid: _service.uuid } })
+
+                            if(_service.recent_notificated_date == null || dayjs().diff(_lastService[0].recent_notificated_date) >= 5 * 60 * 1000) {
                                 switch (_record.result) {
                                     case ResultType.Delayed:
                                         await notificationPlugin.Notification.SMTP.send(process.env.EMAIL_ADDRESS, '[루나 네트워크] 서비스 지연 알림', `아래 서비스의 지연이 발생하였습니다.<br>${ _service.name }`)
                                         await getDatabaseClient().manager.getRepository(Service).update({ uuid: _service.uuid, is_active: true }, { recent_notificated_date: new Date() })
-                                        if(dayjs().diff(_service.recent_notificated_date) >= 60 * 60 * 1000) {
+                                        if(dayjs().diff(_lastService[0].recent_notificated_date) >= 60 * 60 * 1000) {
                                             await notificationPlugin.Notification.SMS.send(process.env.PHONE_NUMBER, `[루나 네트워크] 서비스 지연 알림\n아래 서비스의 지연이 발생하였습니다.\n${ _service.name }`)
                                         }
                                         break
@@ -44,21 +46,21 @@ export default {
                                     case ResultType.Error:
                                         await notificationPlugin.Notification.SMTP.send(process.env.EMAIL_ADDRESS, '[루나 네트워크] 서비스 오류 알림', `아래 서비스의 오류가 발생하였습니다.<br>${ _service.name }`)
                                         await getDatabaseClient().manager.getRepository(Service).update({ uuid: _service.uuid, is_active: true }, { recent_notificated_date: new Date() })
-                                        if(dayjs().diff(_service.recent_notificated_date) >= 60 * 60 * 1000) {
+                                        if(dayjs().diff(_lastService[0].recent_notificated_date) >= 60 * 60 * 1000) {
                                             await notificationPlugin.Notification.SMS.send(process.env.PHONE_NUMBER, `[루나 네트워크] 서비스 지연 알림\n아래 서비스의 지연이 발생하였습니다.\n${ _service.name }`)
                                         }
                                         break
                                     case ResultType.ReRouted:
                                         await notificationPlugin.Notification.SMTP.send(process.env.EMAIL_ADDRESS, '[루나 네트워크] 서비스 Re-route 알림', `아래 서비스의 Re-route가 발생하였습니다.<br>${ _service.name }`)
                                         await getDatabaseClient().manager.getRepository(Service).update({ uuid: _service.uuid, is_active: true }, { recent_notificated_date: new Date() })
-                                        if(dayjs().diff(_service.recent_notificated_date) >= 60 * 60 * 1000) {
+                                        if(dayjs().diff(_lastService[0].recent_notificated_date) >= 60 * 60 * 1000) {
                                             await notificationPlugin.Notification.SMS.send(process.env.PHONE_NUMBER, `[루나 네트워크] 서비스 지연 알림\n아래 서비스의 지연이 발생하였습니다.\n${ _service.name }`)
                                         }
                                         break
                                     case ResultType.Timeout:
                                         await notificationPlugin.Notification.SMTP.send(process.env.EMAIL_ADDRESS, '[루나 네트워크] 서비스 다운 알림', `아래 서비스의 다운이 발생하였습니다.<br>${ _service.name }`)
                                         await getDatabaseClient().manager.getRepository(Service).update({ uuid: _service.uuid, is_active: true }, { recent_notificated_date: new Date() })
-                                        if(dayjs().diff(_service.recent_notificated_date) >= 60 * 60 * 1000) {
+                                        if(dayjs().diff(_lastService[0].recent_notificated_date) >= 60 * 60 * 1000) {
                                             await notificationPlugin.Notification.SMS.send(process.env.PHONE_NUMBER, `[루나 네트워크] 서비스 지연 알림\n아래 서비스의 지연이 발생하였습니다.\n${ _service.name }`)
                                         }
                                         break
