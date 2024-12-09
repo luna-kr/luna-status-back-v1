@@ -16,7 +16,7 @@ export class StatusService {
 
     public async getGroups (): Promise<{ success: true, groups: Array<{ id: string, name: string }> } | { success: false, error? :Error }> {
         try {
-            const _groups = await this._entityManager.getRepository(Group).find({ where: { is_active: true } })
+            const _groups = await this._entityManager.getRepository(Group).find({ where: { is_active: true }, order: { srl: 'asc' } })
             return { success: true, groups: _groups.map(_group => { return { id: _group.uuid, name: _group.name } }) }
         } catch(_error) { return _error instanceof Error ? { success: false, error: new Error('An unknown error has occured', { cause: _error }) } : (typeof _error == 'string' ? { success: false, error: new Error(_error) } : { success: false, error: new Error('An unknown error has occured.') }) }
     }
